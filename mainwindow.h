@@ -20,6 +20,14 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     QString customerID;
+    static QString userProfilePathOSX;
+    static QString userProfilePathWIN;
+    static QString userProfilePathLinux;
+    QString customerALL;
+    QString customerUpdate;
+    QString customerDelete;
+    QString customerAdd;
+
 
 
 private slots:
@@ -46,6 +54,10 @@ private slots:
     void on_listID_itemClicked(QListWidgetItem *item);
 
     void on_actionPreferences_triggered();
+     void init();
+      QString detectPlatform();
+
+      void on_actionClose_triggered();
 
 private:
     Ui::MainWindow *ui;

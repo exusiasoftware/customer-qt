@@ -13,7 +13,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QVariantMap>
-
 #include <QMessageBox>
 #include <QListWidgetItem>
 #include "preferences.h"
@@ -34,18 +33,87 @@ MainWindow::MainWindow(QWidget *parent)
 {
 
     ui->setupUi(this);
+    init();
     refreshCustomerList();
     ui->pushButtonDelete->setEnabled(false);
     ui->pushButtonUpdate->setEnabled(false);
 
-
-
 }
+
+QString MainWindow::userProfilePathOSX = "/Library/Application Support/Customer/";
+QString MainWindow::userProfilePathWIN = "/AppData/Local/Customer/";
+QString MainWindow::userProfilePathLinux = "/usr/local/share/Customer/";
 
 MainWindow::~MainWindow()
 {
     delete ui;
 }
+
+
+QString MainWindow::detectPlatform()
+{
+    QString path;
+
+    if(QSysInfo::productType() == "osx") {
+        path =  userProfilePathOSX;
+    }
+
+    if(QSysInfo::productType() == "windows") {
+       path = userProfilePathWIN;
+    }
+
+    if(QSysInfo::productType() == "ubuntu") {
+        path = userProfilePathLinux;
+    }
+
+    return path;
+
+}
+
+
+
+void MainWindow::init() {
+    QVariantMap json_map;
+    QString path = detectPlatform();
+     qDebug() << path;
+
+    if( QFileInfo(QDir::homePath() + path + "apipaths.json").exists()){
+            QFile file_obj(QDir::homePath() + path + "apipaths.json");
+            if(!file_obj.open(QIODevice::ReadOnly)){
+                qDebug() << "Failed to open ";
+                exit(1);
+            } else {
+
+                 qDebug() << "File opened ";
+                 QTextStream file_text(&file_obj);
+                 QString json_string;
+                 json_string = file_text.readAll();
+                 file_obj.close();
+
+                 QJsonDocument jsonResponse = QJsonDocument::fromJson(json_string.toUtf8());
+
+                 QJsonObject jsonObject = jsonResponse.object();
+                 QVariantMap json_map = jsonObject.toVariantMap();
+
+
+                 MainWindow::customerALL = json_map["all"].toString();
+                 MainWindow::customerUpdate = json_map["update"].toString();
+                 MainWindow::customerDelete = json_map["delete"].toString();
+                 MainWindow::customerAdd = json_map["add"].toString();
+
+            }
+
+
+    } else {
+       qDebug() << "File not exist ";
+   }
+
+}
+
+
+
+
+
 
 
 
@@ -165,7 +233,9 @@ void MainWindow::refreshCustomerList() {
     ui->lineEditTitle->clear();
     ui->lineEditDepartment->clear();
 
-    const QUrl API_ENDPOINT("http://localhost:8080/customer-api/v1/customers/all");
+//    const QUrl API_ENDPOINT("http://localhost:8080/customer-api/v1/customers/all");
+    const QUrl API_ENDPOINT(MainWindow::customerALL);
+
     QNetworkRequest request;
     request.setUrl(API_ENDPOINT);
 
@@ -237,7 +307,10 @@ void MainWindow::on_pushButtonUpdate_clicked()
     testMapData.insert("department",department);
 
     QJsonDocument testJsonData = QJsonDocument::fromVariant(testMapData);
-    const QUrl API_ENDPOINT("http://localhost:8080/customer-api/v1/customer/" + id);
+//    const QUrl API_ENDPOINT("http://localhost:8080/customer-api/v1/customer/" + id);
+     const QUrl API_ENDPOINT(MainWindow::customerUpdate + id);
+
+
     QNetworkRequest request;
     request.setUrl(API_ENDPOINT);
     request.setRawHeader("Content-Type", "application/json");
@@ -263,7 +336,9 @@ void MainWindow::on_pushButtonDelete_clicked()
 
     QString id = MainWindow::customerID;
 
-    const QUrl API_ENDPOINT("http://localhost:8080/customer-api/v1/customers/" + id);
+//    const QUrl API_ENDPOINT("http://localhost:8080/customer-api/v1/customers/" + id);
+    const QUrl API_ENDPOINT(MainWindow::customerDelete + id);
+
     QNetworkRequest request;
     request.setUrl(API_ENDPOINT);
 
@@ -320,7 +395,9 @@ void MainWindow::on_pushButtonAdd_clicked()
     testMapData.insert("department",department);
 
     QJsonDocument testJsonData = QJsonDocument::fromVariant(testMapData);
-    const QUrl API_ENDPOINT("http://localhost:8080/customer-api/v1/customers");
+//    const QUrl API_ENDPOINT("http://localhost:8080/customer-api/v1/customers");
+     const QUrl API_ENDPOINT(MainWindow::customerAdd);
+
     QNetworkRequest request;
     request.setUrl(API_ENDPOINT);
     request.setRawHeader("Content-Type", "application/json");
@@ -351,4 +428,9 @@ void MainWindow::on_actionPreferences_triggered()
     Preferences d;
     d.setModal(true);
     d.exec();
+}
+
+void MainWindow::on_actionClose_triggered()
+{
+    QApplication::quit();
 }
