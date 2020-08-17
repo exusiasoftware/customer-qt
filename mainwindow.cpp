@@ -8,6 +8,7 @@
 #include "mainwindow.h"
 #include <QDebug>
 #include <QFile>
+#include <QDir>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
@@ -15,6 +16,7 @@
 
 #include <QMessageBox>
 #include <QListWidgetItem>
+#include "preferences.h"
 
 
 
@@ -343,3 +345,10 @@ void MainWindow::on_pushButtonRefresh_clicked()
 
 }
 
+
+void MainWindow::on_actionPreferences_triggered()
+{
+    Preferences d;
+    d.setModal(true);
+    d.exec();
+}

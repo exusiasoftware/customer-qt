@@ -45,6 +45,8 @@ private slots:
 
     void on_listID_itemClicked(QListWidgetItem *item);
 
+    void on_actionPreferences_triggered();
+
 private:
     Ui::MainWindow *ui;
     QNetworkAccessManager * mNetManager;
